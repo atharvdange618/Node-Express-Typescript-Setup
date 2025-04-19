@@ -1,0 +1,61 @@
+{
+  "name": "node-express-typescript-setup",
+  "version": "1.0.0",
+  "description": "My personal node with express + typescript setup",
+  "homepage": "https://github.com/atharvdange618/Node-Express-Typescript-Setup#readme",
+  "bugs": {
+    "url": "https://github.com/atharvdange618/Node-Express-Typescript-Setup/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atharvdange618/Node-Express-Typescript-Setup.git"
+  },
+  "license": "ISC",
+  "author": "Atharv Dange",
+  "type": "commonjs",
+  "main": "index.ts",
+  "scripts": {
+    "start": "node dist/app.js",
+    "dev": "nodemon src/app.ts",
+    "build": "tsc",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.6.0",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/nodemailer": "^6.4.17",
+    "argon2": "^0.41.1",
+    "chalk": "^5.4.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-async-handler": "^1.2.0",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "nodemailer": "^6.10.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-jwt": "^4.0.1",
+    "prisma": "^6.6.0",
+    "winston": "^3.17.0",
+    "zod": "^3.24.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.14.1",
+    "@types/passport": "^1.0.17",
+    "@types/passport-google-oauth20": "^2.0.16",
+    "@types/passport-jwt": "^4.0.1",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
