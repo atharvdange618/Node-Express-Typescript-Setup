@@ -1,7 +1,7 @@
 import { z } from "zod";
 import dotenv from "dotenv";
 
-dotenv.config(); // Load .env into process.env
+dotenv.config();
 
 const envSchema = z.object({
   NODE_ENV: z
@@ -12,6 +12,8 @@ const envSchema = z.object({
     .string()
     .default("3000")
     .transform((val) => parseInt(val, 10)),
+
+  ALLOWED_ORIGINS: z.string().default("http://localhost:3000"),
 
   JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
   JWT_EXPIRES_IN: z.string().default("1h"),
@@ -39,7 +41,7 @@ const envSchema = z.object({
 
   APP_URL: z.string().url().default("http://localhost:8000"),
 
-  SERVER_HOSTNAME_ENV: z.string().optional(), // raw value from .env if present
+  SERVER_HOSTNAME_ENV: z.string().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);

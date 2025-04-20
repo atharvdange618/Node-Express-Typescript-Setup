@@ -1,8 +1,6 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../utils/prisma";
 import emailService from "./email.service";
 import logging from "../config/logging";
-
-const prisma = new PrismaClient();
 
 export interface HealthStatus {
   status: string;
@@ -13,9 +11,25 @@ export interface HealthStatus {
 }
 
 class HealthCheckService {
+  private timeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("Timeout")), ms);
+      promise
+        .then((res) => {
+          clearTimeout(timer);
+          resolve(res);
+        })
+        .catch((err) => {
+          clearTimeout(timer);
+          reject(err);
+        });
+    });
+  }
+
   async checkDatabase(): Promise<string> {
     try {
-      await prisma.$queryRaw`SELECT 1`;
+      // Timeout after 2 seconds
+      await this.timeout(prisma.$queryRaw`SELECT 1`, 2000);
       return "Connected";
     } catch (err) {
       logging.error("Database health check failed:", err);
@@ -24,13 +38,23 @@ class HealthCheckService {
   }
 
   async checkEmailService(): Promise<string> {
-    const isEmailConnected = await emailService.verifyTransport();
-    return isEmailConnected ? "Connected" : "Disconnected";
+    try {
+      const isEmailConnected = await this.timeout(
+        emailService.verifyTransport(),
+        2000
+      );
+      return isEmailConnected ? "Connected" : "Disconnected";
+    } catch (err) {
+      logging.error("Email service health check failed:", err);
+      return "Disconnected";
+    }
   }
 
   async performHealthCheck(): Promise<HealthStatus> {
-    const dbStatus = await this.checkDatabase();
-    const emailStatus = await this.checkEmailService();
+    const [dbStatus, emailStatus] = await Promise.all([
+      this.checkDatabase(),
+      this.checkEmailService(),
+    ]);
 
     return {
       status: "OK",

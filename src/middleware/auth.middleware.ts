@@ -2,19 +2,25 @@ import { Request, Response, NextFunction } from "express";
 import { AuthUtils } from "../utils/auth.utils";
 import * as Api from "../factories/apiErrorFactory";
 
-export const authMiddleware = (
+const extractToken = (authHeader?: string): string | null => {
+  if (!authHeader) return null;
+  const parts = authHeader.split(" ");
+  if (parts.length !== 2 || parts[0] !== "Bearer") return null;
+  return parts[1];
+};
+
+export const authMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const authHeader = req.headers.authorization;
+    const token = extractToken(req.headers.authorization);
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
       return next(Api.unauthorized("Authentication token required"));
     }
 
-    const token = authHeader.split(" ")[1];
     const decoded = AuthUtils.verifyAccessToken(token);
 
     if (!decoded) {

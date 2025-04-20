@@ -6,7 +6,6 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-// JWT Strategy for authentication
 const jwtOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
   secretOrKey: environment.jwtSecret,
@@ -29,7 +28,6 @@ passport.use(
   })
 );
 
-// Google OAuth Strategy
 passport.use(
   new GoogleStrategy(
     {

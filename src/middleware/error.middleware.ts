@@ -25,7 +25,6 @@ export const errorMiddleware = (
     return res.status(statusCode).json(error.toJSON());
   }
 
-  // Log stack trace in dev only
   if (process.env.NODE_ENV !== "production") {
     logging.error(`[${method}] ${path} >> Unexpected Error: ${error.message}`, {
       stack: error.stack,
@@ -42,6 +41,4 @@ export const errorMiddleware = (
       ...(process.env.NODE_ENV !== "production" && { stack: error.stack }),
     },
   });
-
-  next(error);
 };

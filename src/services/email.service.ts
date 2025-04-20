@@ -8,7 +8,6 @@ import {
 } from "../templates/emailTemplates";
 import { environment } from "../config/environment";
 
-// Types
 interface EmailUser {
   email: string;
   firstName?: string;
@@ -27,7 +26,6 @@ class EmailService {
   private readonly appUrl: string;
 
   constructor() {
-    // Validate required environment variables
     const requiredEnvVars = [
       "smtpHost",
       "smtpPort",
@@ -133,8 +131,11 @@ class EmailService {
 
     return this.sendEmail(user.email, "Reset Your Password", html);
   }
+
+  async closeTransport() {
+    this.transporter.close();
+  }
 }
 
-// Create and export a singleton instance
 const emailService = new EmailService();
 export default emailService;

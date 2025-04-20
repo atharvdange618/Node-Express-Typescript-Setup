@@ -6,10 +6,8 @@ export const productionFormat: morgan.FormatFn<
   IncomingMessage,
   ServerResponse
 > = (tokens, req, res): string => {
-  // Get the status code and convert it to a number
   const status = Number(tokens.status(req, res)) || 0;
 
-  // Determine color based on status code
   const statusColor = status
     ? (status >= 500
         ? chalk.red
@@ -20,7 +18,6 @@ export const productionFormat: morgan.FormatFn<
         : chalk.green)(status.toString())
     : chalk.gray("-");
 
-  // Retrieve the custom "timed" token if available
   const timedMsg = tokens.timed ? chalk.magenta(tokens.timed(req, res)) : "";
 
   return [

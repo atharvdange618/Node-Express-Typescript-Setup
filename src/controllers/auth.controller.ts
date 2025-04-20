@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import {prisma} from '../utils/prisma'
+import { prisma } from "../utils/prisma";
 import { AuthUtils } from "../utils/auth.utils";
 import emailService from "../services/email.service";
 import {
@@ -11,7 +11,6 @@ import { environment } from "../config/environment";
 import * as Api from "../factories/apiErrorFactory";
 import * as ApiResponse from "../factories/apiResponseFactory";
 import { AuthenticatedUser } from "../types/auth";
-
 
 export class AuthController {
   static async register(
@@ -50,13 +49,7 @@ export class AuthController {
         },
       });
 
-      const accessToken = AuthUtils.generateAccessToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      });
-
-      const refreshToken = AuthUtils.generateRefreshToken({
+      const { accessToken, refreshToken } = await AuthUtils.generateTokens({
         id: user.id,
         email: user.email,
         role: user.role,
@@ -100,13 +93,7 @@ export class AuthController {
         return next(Api.unauthorized("Invalid credentials"));
       }
 
-      const accessToken = AuthUtils.generateAccessToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      });
-
-      const refreshToken = AuthUtils.generateRefreshToken({
+      const { accessToken, refreshToken } = await AuthUtils.generateTokens({
         id: user.id,
         email: user.email,
         role: user.role,
@@ -160,17 +147,12 @@ export class AuthController {
         return next(Api.unauthorized("Invalid refresh token"));
       }
 
-      const newAccessToken = AuthUtils.generateAccessToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      });
-
-      const newRefreshToken = AuthUtils.generateRefreshToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      });
+      const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+        await AuthUtils.generateTokens({
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        });
 
       await prisma.user.update({
         where: { id: user.id },
@@ -217,15 +199,9 @@ export class AuthController {
         return res.redirect("/login?error=authentication-failed");
       }
 
-      const user = req.user as any;
+      const user = req.user as AuthenticatedUser;
 
-      const accessToken = AuthUtils.generateAccessToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      });
-
-      const refreshToken = AuthUtils.generateRefreshToken({
+      const { accessToken, refreshToken } = await AuthUtils.generateTokens({
         id: user.id,
         email: user.email,
         role: user.role,

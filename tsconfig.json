@@ -11,6 +11,6 @@
     "resolveJsonModule": true,
     "typeRoots": ["./src/types", "./node_modules/@types"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "globals.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

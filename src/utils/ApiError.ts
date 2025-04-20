@@ -13,6 +13,7 @@ export class ApiError extends Error {
 
   constructor(statusCode: number, message: string, details?: any[]) {
     super(message);
+    this.name = "ApiError";
     this.statusCode = statusCode;
     this.details = details;
 

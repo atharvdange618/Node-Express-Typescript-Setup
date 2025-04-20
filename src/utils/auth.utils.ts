@@ -2,21 +2,15 @@ import jwt, { SignOptions } from "jsonwebtoken";
 import * as argon2 from "argon2";
 import { environment } from "../config/environment";
 
+interface TokenPayload {
+  id: string;
+  role: string;
+  email: string;
+}
+
 interface TokenResponse {
   accessToken: string;
   refreshToken: string;
-}
-
-interface AccessTokenPayload {
-  id: string;
-  role: string;
-  email: string;
-}
-
-interface RefreshTokenPayload {
-  id: string;
-  role: string;
-  email: string;
 }
 
 export class AuthUtils {
@@ -31,48 +25,48 @@ export class AuthUtils {
     return await argon2.verify(hashedPassword, plainPassword);
   }
 
-  static generateAccessToken(payload: AccessTokenPayload): string {
+  static generateAccessToken(payload: TokenPayload): string {
     return jwt.sign(payload, environment.jwtSecret, {
       expiresIn: environment.jwtExpiresIn,
+      audience: environment.appUrl,
+      issuer: environment.serverHostname,
     } as SignOptions);
   }
 
-  static generateRefreshToken(payload: RefreshTokenPayload): string {
+  static generateRefreshToken(payload: TokenPayload): string {
     return jwt.sign(payload, environment.refreshTokenSecret, {
       expiresIn: environment.refreshTokenExpiresIn,
+      audience: environment.appUrl,
+      issuer: environment.serverHostname,
     } as SignOptions);
   }
 
-  static verifyAccessToken(token: string): AccessTokenPayload | null {
+  static verifyAccessToken(token: string): TokenPayload | null {
     try {
-      return jwt.verify(token, environment.jwtSecret) as AccessTokenPayload;
+      return jwt.verify(token, environment.jwtSecret, {
+        audience: environment.appUrl,
+        issuer: environment.serverHostname,
+      }) as TokenPayload;
     } catch (error) {
       return null;
     }
   }
 
-  static verifyRefreshToken(token: string): RefreshTokenPayload | null {
+  static verifyRefreshToken(token: string): TokenPayload | null {
     try {
-      return jwt.verify(
-        token,
-        environment.refreshTokenSecret
-      ) as RefreshTokenPayload;
+      return jwt.verify(token, environment.refreshTokenSecret, {
+        audience: environment.appUrl,
+        issuer: environment.serverHostname,
+      }) as TokenPayload;
     } catch (error) {
       return null;
     }
   }
 
-  static generateTokens(payload: AccessTokenPayload): TokenResponse {
-    const accessToken = this.generateAccessToken(payload);
-    const refreshToken = this.generateRefreshToken({
-      id: payload.id,
-      role: payload.role,
-      email: payload.email,
-    });
-
+  static generateTokens(payload: TokenPayload): TokenResponse {
     return {
-      accessToken,
-      refreshToken,
+      accessToken: this.generateAccessToken(payload),
+      refreshToken: this.generateRefreshToken(payload),
     };
   }
 }

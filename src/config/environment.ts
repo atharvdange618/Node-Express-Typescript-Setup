@@ -12,6 +12,8 @@ export const environment = {
   nodeEnv: env.NODE_ENV,
   port: env.PORT,
 
+  allowedOrigins: env.ALLOWED_ORIGINS,
+
   jwtSecret: env.JWT_SECRET as Secret,
   jwtExpiresIn: env.JWT_EXPIRES_IN || "15m",
 

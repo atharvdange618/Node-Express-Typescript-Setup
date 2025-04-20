@@ -1,31 +1,24 @@
-import { Request, Response, NextFunction } from "express";
+import cors from "cors";
+import { environment } from "../config/environment";
 
-export function corsHandler(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
-  const origin = req.header("origin");
+const allowedOrigins = environment.allowedOrigins
+  ? environment.allowedOrigins.split(",")
+  : [];
 
-  const allowedOrigins = ["http://localhost:3000", "http://localhost:8080"];
-
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-    );
-    res.header(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-    );
-
-    if (req.method === "OPTIONS") {
-      res.status(204).end();
-      return;
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      logging.warn(`CORS: Blocked origin - ${origin}`);
+      callback(new Error("Not allowed by CORS"));
     }
-  }
+  },
+  credentials: true,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+  allowedHeaders:
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+  optionsSuccessStatus: 204,
+};
 
-  next();
-}
+export const corsMiddleware = cors(corsOptions);

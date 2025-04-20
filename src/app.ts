@@ -11,7 +11,7 @@ import { notFoundMiddleware } from "./middleware/notFound.middleware";
 import { rateLimiterMiddleware } from "./middleware/rateLimiter.middleware";
 import passport from "./config/passport";
 import { devFormat, productionFormat } from "./middleware/loggingHandler";
-import { corsHandler } from "./middleware/corsHandler";
+import { corsMiddleware } from "./middleware/corsHandler";
 import emailService from "./services/email.service";
 import healthCheckService from "./services/healthcheck.service";
 
@@ -22,9 +22,7 @@ export let httpServer: ReturnType<typeof http.createServer>;
 // app.use(passport.initialize());
 
 export const Main = async () => {
-  logging.info("-------------------------------");
   logging.info("Initializing API");
-  logging.info("-------------------------------");
 
   if (environment.nodeEnv === "production") {
     app.use(morgan(productionFormat));
@@ -37,33 +35,26 @@ export const Main = async () => {
   app.use(express.json());
   app.use(helmet());
   app.use(cookieParser());
+  app.use(corsMiddleware);
   app.use(rateLimiterMiddleware);
-  app.use(corsHandler);
 
-  logging.info("-------------------------------");
   logging.info("Setting up email service");
-  logging.info("-------------------------------");
   // Email service
   await emailService.verifyTransport();
 
-  logging.info("-------------------------------");
   logging.info("Connecting to PostgreSQL with Prisma");
-  logging.info("-------------------------------");
+
   try {
     await prisma.$connect();
-    logging.info("-------------------------------");
     logging.info("Connected to PostgreSQL successfully");
-    logging.info("-------------------------------");
   } catch (error) {
-    logging.info("-------------------------------");
     logging.info("Unable to connect to PostgreSQL");
     logging.error(error);
-    logging.info("-------------------------------");
+    // process.exit(1);
   }
 
-  logging.info("-------------------------------");
   logging.info("Health Check Route");
-  logging.info("-------------------------------");
+
   app.get("/", (req: Request, res: Response) => {
     res.status(200).json({ status: "OK" });
   });
@@ -95,16 +86,13 @@ export const Main = async () => {
     ) => void
   );
 
-  logging.info("-------------------------------");
   logging.info("Start Server");
-  logging.info("-------------------------------");
+
   httpServer = http.createServer(app);
   httpServer.listen(environment.port, () => {
-    logging.info("-------------------------------");
     logging.info(
       "Server Started:" + environment.serverHostname + ":" + environment.port
     );
-    logging.info("-------------------------------");
   });
 
   // Handle uncaught exceptions and rejections
