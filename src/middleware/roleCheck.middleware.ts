@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as Api from "../factories/apiErrorFactory";
+import { AuthenticatedUser } from "../types/auth";
 
 export const roleMiddleware = (roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -8,7 +9,9 @@ export const roleMiddleware = (roles: string[]) => {
         return next(Api.unauthorized("User not authenticated"));
       }
 
-      if (!roles.includes(req.user.role)) {
+      const user = req.user as AuthenticatedUser;
+
+      if (!roles.includes(user.role)) {
         return next(Api.forbidden("Insufficient permissions"));
       }
 

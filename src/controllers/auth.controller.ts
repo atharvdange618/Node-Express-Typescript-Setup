@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
+import {prisma} from '../utils/prisma'
 import { AuthUtils } from "../utils/auth.utils";
 import emailService from "../services/email.service";
 import {
@@ -10,8 +10,8 @@ import {
 import { environment } from "../config/environment";
 import * as Api from "../factories/apiErrorFactory";
 import * as ApiResponse from "../factories/apiResponseFactory";
+import { AuthenticatedUser } from "../types/auth";
 
-const prisma = new PrismaClient();
 
 export class AuthController {
   static async register(
@@ -194,8 +194,10 @@ export class AuthController {
         return next(Api.unauthorized("Not authenticated"));
       }
 
+      const user = req.user as AuthenticatedUser;
+
       await prisma.user.update({
-        where: { id: req.user.id },
+        where: { id: user.id },
         data: { refreshToken: null },
       });
 

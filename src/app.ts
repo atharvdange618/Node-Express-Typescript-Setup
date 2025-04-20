@@ -4,7 +4,7 @@ import helmet from "helmet";
 import "./config/logging";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "./utils/prisma";
 import { environment } from "./config/environment";
 import { errorMiddleware } from "./middleware/error.middleware";
 import { notFoundMiddleware } from "./middleware/notFound.middleware";
@@ -13,8 +13,8 @@ import passport from "./config/passport";
 import { devFormat, productionFormat } from "./middleware/loggingHandler";
 import { corsHandler } from "./middleware/corsHandler";
 import emailService from "./services/email.service";
+import healthCheckService from "./services/healthcheck.service";
 
-const prisma = new PrismaClient();
 export const app = express();
 export let httpServer: ReturnType<typeof http.createServer>;
 
@@ -46,21 +46,20 @@ export const Main = async () => {
   // Email service
   await emailService.verifyTransport();
 
-  // logging.info("-------------------------------");
-  // logging.info("Connecting to PostgreSQL with Prisma");
-  // logging.info("-------------------------------");
-  // try {
-  //   await prisma.$connect();
-  //   logging.info("-------------------------------");
-  //   logging.info("Connected to PostgreSQL successfully");
-  //   logging.info("-------------------------------");
-  // } catch (error) {
-  //   logging.info("-------------------------------");
-  //   logging.info("Unable to connect to PostgreSQL");
-  //   logging.error(error);
-  //   logging.info("-------------------------------");
-  //   throw new ApiError(500, "Database connection failed");
-  // }
+  logging.info("-------------------------------");
+  logging.info("Connecting to PostgreSQL with Prisma");
+  logging.info("-------------------------------");
+  try {
+    await prisma.$connect();
+    logging.info("-------------------------------");
+    logging.info("Connected to PostgreSQL successfully");
+    logging.info("-------------------------------");
+  } catch (error) {
+    logging.info("-------------------------------");
+    logging.info("Unable to connect to PostgreSQL");
+    logging.error(error);
+    logging.info("-------------------------------");
+  }
 
   logging.info("-------------------------------");
   logging.info("Health Check Route");
@@ -69,12 +68,18 @@ export const Main = async () => {
     res.status(200).json({ status: "OK" });
   });
 
-  app.get("/healthcheck", (req: Request, res: Response) => {
-    res.status(200).json({
-      status: "OK",
-      timestamp: new Date().toISOString(),
-      database: "Connected",
-    });
+  app.get("/healthcheck", async (req: Request, res: Response) => {
+    try {
+      const healthStatus = await healthCheckService.performHealthCheck();
+      res.status(200).json(healthStatus);
+    } catch (error) {
+      logging.error("Health check failed:", error);
+      res.status(500).json({
+        status: "ERROR",
+        timestamp: new Date().toISOString(),
+        message: "Health check failed",
+      });
+    }
   });
 
   // Not found route

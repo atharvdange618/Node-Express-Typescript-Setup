@@ -1,4 +1,5 @@
-export {};
+import "express";
+import { User } from "@prisma/client";
 
 declare global {
   var logging: {
@@ -9,4 +10,12 @@ declare global {
     error: (message?: any, ...optionalParams: any[]) => void;
     getCallingFunction: (error: Error) => string;
   };
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: Pick<User, "id" | "email" | "role">;
+    }
+  }
 }
