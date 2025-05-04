@@ -1,24 +1,19 @@
 import { createLogger, format, transports } from "winston";
-import { environment } from "./environment";
+import "winston-daily-rotate-file";
 
-const { combine, timestamp, printf, colorize } = format;
+const { combine, timestamp, json, errors } = format;
 
-const myFormat = printf(({ level, message, timestamp, ...metadata }) => {
-  const metaStr = Object.keys(metadata).length ? JSON.stringify(metadata) : "";
-  return `${timestamp} [${level}]: ${message} ${metaStr}`;
-});
-
-const logger = createLogger({
-  level: environment.nodeEnv === "production" ? "info" : "debug",
-  format: combine(timestamp(), myFormat),
+export const logger = createLogger({
+  level: "info",
+  format: combine(timestamp(), errors({ stack: true }), json()),
   transports: [
-    new transports.Console({
-      format: combine(colorize(), timestamp(), myFormat),
+    new transports.DailyRotateFile({
+      filename: "logs/application-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
+      maxFiles: "14d",
+      zippedArchive: true,
+      level: "info",
     }),
-    new transports.File({ filename: "logs/error.log", level: "error" }),
-    new transports.File({ filename: "logs/combined.log" }),
   ],
   exitOnError: false,
 });
-
-export default logger;

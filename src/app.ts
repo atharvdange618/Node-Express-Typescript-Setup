@@ -3,6 +3,7 @@ import express, { Request, Response } from "express";
 import helmet from "helmet";
 import "./config/logging";
 import morgan from "morgan";
+import { logger } from "./config/logger";
 import cookieParser from "cookie-parser";
 import { prisma } from "./utils/prisma";
 import { environment } from "./config/environment";
@@ -10,10 +11,14 @@ import { errorMiddleware } from "./middleware/error.middleware";
 import { notFoundMiddleware } from "./middleware/notFound.middleware";
 import { rateLimiterMiddleware } from "./middleware/rateLimiter.middleware";
 import passport from "./config/passport";
+import expressWinston from "express-winston";
 import { devFormat, productionFormat } from "./middleware/loggingHandler";
 import { corsMiddleware } from "./middleware/corsHandler";
 import emailService from "./services/email.service";
 import healthCheckService from "./services/healthcheck.service";
+import { requestIdMiddleware } from "./middleware/requestId.middleware";
+import { AuthenticatedUser } from "./types/auth";
+import { RequestWithUser } from "./types/request";
 
 export const app = express();
 export let httpServer: ReturnType<typeof http.createServer>;
@@ -23,6 +28,29 @@ export let httpServer: ReturnType<typeof http.createServer>;
 
 export const Main = async () => {
   logging.info("Initializing API");
+
+  // Logging middleware
+  app.use(requestIdMiddleware);
+
+  app.use(
+    expressWinston.logger({
+      winstonInstance: logger,
+      msg: "HTTP {{req.method}} {{req.url}}",
+      meta: true,
+      metaField: null,
+      expressFormat: false,
+      colorize: false,
+      dynamicMeta: (req) => {
+        const user = req.user as AuthenticatedUser | undefined;
+
+        return {
+          requestId: (req as RequestWithUser).requestId,
+          userId: user?.id,
+          userRole: user?.role,
+        };
+      },
+    })
+  );
 
   if (environment.nodeEnv === "production") {
     app.use(morgan(productionFormat));
